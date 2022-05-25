@@ -1,0 +1,23 @@
+{% load static %}
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    {% block title %}
+    <title>SixEight</title>
+    {% endblock %}
+    <link rel="icon" href="{% static 'blogs/images/favicon.ico' %}">
+    <link rel="stylesheet" href="{% static 'blogs/plugins/bootstrap-3.4.1-dist/css/bootstrap.css' %}">
+    <script src="{% static 'blogs/js/jQuery3.6.0.js' %}"></script>
+    <script src="{% static 'blogs/plugins/bootstrap-3.4.1-dist/js/bootstrap.js'%}"></script>
+    {% block css %}{% endblock %}
+    {% block extracss %}{% endblock %}
+</head>
+
+<body>
+{% block body %}{% endblock %}
+</body>
+
+{% block js %}{% endblock %}
+
+</html>

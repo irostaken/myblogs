@@ -1,0 +1,158 @@
+{% extends 'blogs/base.html' %}
+
+{% load articles %}
+
+{% block side %}
+    <ul class="nav nav-sidebar">
+        {% for menu in menus %}
+            {% if menu.url != cur_url %}
+                <li><a href="{% url menu.url %}">{{ menu.name }}</a></li>
+            {% else %}
+                <li class="active"><a href="{% url menu.url %}">{{ menu.name }}</a></li>
+            {% endif %}
+        {% endfor %}
+    </ul>
+{% endblock %}
+
+{% block extracss %}
+    <style>
+        .blog-post a {
+            text-decoration-line: none;
+        }
+
+        .blog-sidebar div ol {
+            background-color: whitesmoke;
+            padding: 10px;
+        }
+
+        .blog-sidebar div ol li {
+            padding: 5px;
+        }
+
+        .return-top {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            margin-top: 200px;
+            padding: 15px;
+            right: 15px;
+            bottom: 15px;
+            position: fixed;
+        }
+    </style>
+{% endblock %}
+
+{% block mainbody %}
+    <div class="blog-header">
+    </div>
+
+    <div class="row">
+        <div class="col-sm-8 blog-main">
+            {% for article in articles %}
+                <div class="blog-post">
+                    <h4 class="blog-post-title"><a
+                            href="{% url 'blogs:detail_article' article.id %}">{{ forloop.counter }}. {{ article.title }}</a>
+                    </h4>
+                    <p class="blog-post-meta">{% dateformat2 article.pub_date %} By <a href="">{{ article.owner }}</a>
+                    </p>
+                    <blockquote>
+                        <p style="font-size: 14px">{{ article.summary }}</p>
+                    </blockquote>
+                </div><!-- /.blog-post -->
+            {% endfor %}
+
+            <nav>
+                <ul class="pager">
+                    <li><a style="text-decoration-line: none; cursor: pointer" onclick="GetPage(this)">Previous</a></li>
+                    <li>{{ cur_page }} / {{ total_page }}</li>
+                    <li><a style="text-decoration-line: none; cursor: pointer" onclick="GetPage(this)">Next</a></li>
+                </ul>
+            </nav>
+        </div>
+
+        <div class="col-sm-3 col-sm-offset-1 blog-sidebar" style="position: fixed; right: 0;">
+            <div class="sidebar-module sidebar-module-inset">
+                <h4>About</h4>
+                <p>Just a simple blog to record my study.</p>
+            </div>
+            <div class="sidebar-module">
+                <h4>Archives (<a style="text-decoration-line: none;" href="{% url 'blogs:index' %}">all</a>)</h4>
+                <small style="font-weight: bold">By Article_type</small>
+                <ol class="list-unstyled">
+                    <li><a style="cursor: pointer; text-decoration-line: none;"
+                               onclick="TypeFilter(this)">All</a></li>
+                    {% for article_type in article_types %}
+                        <li><a style="cursor: pointer; text-decoration-line: none;"
+                               onclick="TypeFilter(this)">{{ article_type }}</a></li>
+                    {% endfor %}
+                </ol>
+                <small style="font-weight: bold">By Pub_date</small>
+                <ol class="list-unstyled">
+                    <li><a style="text-decoration-line: none; cursor: pointer;" onclick="DateFilter(this)">All</a>
+                    </li>
+                    <li><a style="text-decoration-line: none; cursor: pointer;" onclick="DateFilter(this)">Today</a>
+                    </li>
+                    <li><a style="text-decoration-line: none; cursor: pointer;" onclick="DateFilter(this)">Last 7 days</a>
+                    </li>
+                    <li><a style="text-decoration-line: none; cursor: pointer;" onclick="DateFilter(this)">This month</a></li>
+                    <li><a style="text-decoration-line: none; cursor: pointer;" onclick="DateFilter(this)">This year</a>
+                    </li>
+                </ol>
+            </div>
+            <div class="sidebar-module">
+                <h4>Elsewhere</h4>
+                <ol class="list-unstyled">
+                    <li><a href="https://github.com" style="text-decoration-line: none">GitHub</a></li>
+                </ol>
+            </div>
+            <div class="sidebar-module">
+                <a onclick="ReturnTop()" class="btn btn-info return-top">top</a>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block extrajs %}
+    <script>
+        function TypeFilter(ths) {
+            var article_type = $(ths).text();
+            if ("{{ date }}" === "None") {
+                window.location.href = "{{ request.path }}" + "?article_type=" + article_type;
+            } else {
+                window.location.href = "{{ request.path }}" + "?date=" + "{{ date }}" + "&article_type=" + article_type;
+            }
+        }
+
+        function DateFilter(ths) {
+            var date = $(ths).text();
+            if ("{{ article_type }}" === "None") {
+                window.location.href = "{{ request.path }}" + "?date=" + date;
+            } else {
+                window.location.href = "{{ request.path }}" + "?article_type=" + "{{ article_type }}" + "&date=" + date;
+            }
+        }
+
+        function GetPage(ths) {
+            cur_page = Number("{{ cur_page }}");
+            total_page = Number("{{ total_page }}");
+            if ($(ths).text() === "Previous") {
+                cur_page -= 1;
+            } else {
+                cur_page += 1;
+            }
+            if (cur_page < 1 || cur_page > total_page) {
+                return;
+            }
+            last_payload = "{% getRequest request %}";
+            extra = '';
+            if (last_payload.endsWith("/")) {
+                extra = "?";
+            }
+            window.location.href = last_payload + extra + "page=" + cur_page;
+        }
+
+        function ReturnTop() {
+            window.scrollTo(0, 0);
+        }
+    </script>
+{% endblock %}

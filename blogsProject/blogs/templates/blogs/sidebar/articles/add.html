@@ -1,0 +1,61 @@
+{% extends 'blogs/index.html' %}
+
+{% load static %}
+{% load articles %}
+
+{% block mainbody %}
+    {% if request.COOKIES.user %}
+    {% block head %}
+        <h1>Add</h1>
+    {% endblock %}
+    <hr>
+    <div class="container" style="margin-left: 0">
+        {% if article_id %}
+            <form class="form-horizontal" id="form" action="{% url 'blogs:edit_article' article_id %}" method="post" novalidate>{% csrf_token %}
+        {% else %}
+            <form class="form-horizontal" id="form" action="{% url 'blogs:add_article' %}" method="post" novalidate>{% csrf_token %}
+        {% endif %}
+            {% for field in form_obj %}
+                <div class="form-group">
+                    <label for="inputEmail3" class="col-sm-2 control-label">{{ field.label }}</label>
+                    {% if field.name != 'article_type' %}
+                        <div class="col-sm-10">
+                            {% fieldFormat field %}
+                            <span style="color: red">{{ field.errors.0 }}</span>
+                        </div>
+                    {% else %}
+                        <div class="col-sm-2">
+                            {% fieldFormat field %}
+                            <span style="color: red">{{ select_error }}</span>
+                        </div>
+                    {% endif %}
+                </div>
+            {% endfor %}
+            <div class="form-group">
+                <label for="inputPassword3" class="col-sm-2 control-label"></label>
+                <div class="col-sm-1">
+                    <input type="submit" onclick="BeforeSendData()" class="form-control btn btn-success">
+                </div>
+            </div>
+        </form>
+    </div>
+    {% else %}
+        <h1>Permission Denied.</h1>
+    {% endif %}
+{% endblock %}
+
+{% block extrajs %}
+    <script src="{% static 'blogs/plugins/kindeditor/kindeditor-min.js' %}"></script>
+    <script>
+        var editor = null;
+        $(function () {
+            editor = KindEditor.create("#content", {
+                height: 550,
+            });
+        })
+        function BeforeSendData() {
+            editor.sync();
+        }
+    </script>
+{% endblock %}
+

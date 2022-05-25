@@ -1,0 +1,225 @@
+{% extends 'blogs/index.html' %}
+
+{% load static %}
+
+{% load articles %}
+
+{% block extracss %}
+    <link rel="stylesheet" href="{% static 'blogs/css/articles.css' %}">
+    <style>
+        a:hover {
+            text-decoration-line: none;
+        }
+        .result-header {
+            height: 36px;
+            line-height: 36px;
+            margin-bottom: 10px;
+        }
+        .result-header * {
+            display: inline-block;
+        }
+    </style>
+{% endblock %}
+
+{% block mainbody %}
+    {% if request.COOKIES.user %}
+    <div class="container-fluid">
+        <div class="row">
+            <h1>Filter</h1>
+            <div class="filter">
+                <div class="type" style="margin-bottom: 20px">
+                    <div class="col-lg-1">
+                        <span style="font-size: 20px">Archive: </span>
+                    </div>
+                    {% if cur_type %}
+                        <a class="btn btn-default" href="{% url 'blogs:articles' %}" role="button">All</a>
+                    {% else %}
+                        <a class="btn btn-default active" href="{% url 'blogs:articles' %}" role="button">All</a>
+                    {% endif %}
+                    {% for article_type in article_types %}
+                        {% if article_type.name == cur_type %}
+                            <a class="btn btn-default active" href="{% url 'blogs:articles' article_type %}"
+                               role="button">{{ article_type }}</a>
+                        {% else %}
+                            <a class="btn btn-default" href="{% url 'blogs:articles' article_type %}"
+                               role="button">{{ article_type }}</a>
+                        {% endif %}
+                    {% endfor %}
+                </div>
+                <div class="search">
+                    <div class="col-lg-1">
+                        <span style="font-size: 20px">Search: </span>
+                    </div>
+                    <div class="input-group" style="width: 250px; top: -2px;">
+                        {% if not wd %}
+                            <input type="text" id="search" class="form-control" placeholder="Search for...">
+                        {% else %}
+                            <input type="text" id="search" class="form-control" value="{{ wd }}">
+                        {% endif %}
+                        <span class="input-group-btn">
+                            <input class="btn btn-default" type="submit" onclick="Search()" value="Go">
+                        </span>
+                    </div>
+                </div>
+            </div>
+            <hr>
+            <div class="result-header">
+                <span style="font-size: 36px">Result</span>
+                <a href="{% url 'blogs:add_article' %}" class="btn-success btn" style="float: right">Add</a>
+            </div>
+            <div class="result">
+                <div class="result-table" style="height: 560px">
+                    <table class="table table-bordered table-hover">
+                        <thead>
+                        <tr>
+                            <td>Type</td>
+                            <td>Title</td>
+                            <td>Pub_date
+                                <a id="pub" onclick="SortPubDate(this)" style="float: right; cursor:pointer;" class="glyphicon"></a>
+                            </td>
+                            <td>Owner</td>
+                            <td>Operation</td>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        {% for article in articles %}
+                            <tr>
+                                <td>{{ article.article_type }}</td>
+                                <td><a href="{% url 'blogs:detail_article' article.id %}">{{ article.title }}</a></td>
+                                <td>{% dateformat article.pub_date %}</td>
+                                <td>{{ article.owner }}</td>
+				<td><a href="{% url 'blogs:edit_article' article.id %}">Edit</a> | <a style="cursor: pointer;" onclick="Getaid('{{ article.id  }}')" data-toggle="modal" data-target="#myModal">Delete</a></td>
+                            </tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                <div style="float: right; margin-top: 10px;">
+                    <input hidden id="total_page" value="{{ total_page }}">
+                    <button name="left" class="btn-info glyphicon glyphicon-chevron-left" value="{{ cur_page }}"
+                            onclick="GetPage(this)"></button>
+                    <span style="width: 40px;">{{ cur_page }} / {{ total_page }}</span>
+                    <button class="btn-info glyphicon glyphicon-chevron-right" value="{{ cur_page }}"
+                            onclick="GetPage(this)"></button>
+                </div>
+            </div>
+        </div>
+	<div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel"
+             aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">
+                            &times;
+                        </button>
+                        <h4 class="modal-title" id="myModalLabel">
+                            Warnning
+                        </h4>
+                    </div>
+                    <div class="modal-body">
+			This article will be deleted, continue?
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-default" data-dismiss="modal">Cancel
+                        </button>
+                        <button type="button" class="btn btn-primary" id="confirm" onclick="ArticleDelete(this)">
+                            Yes, I am sure.
+                        </button>
+                    </div>
+                </div><!-- /.modal-content -->
+            </div><!-- /.modal -->
+        </div>
+    {% else %}				
+        <h1>Permission Denied.</h1>
+    {% endif %}
+{% endblock %}
+
+{% block extrajs %}
+    <script>
+        $(function () {
+            pub = $("#pub");
+            if("{{ pub_date_sort }}"==="0"){
+                pub.removeClass("glyphicon-triangle-top");
+                pub.addClass("glyphicon-triangle-bottom");
+            }else {
+                pub.removeClass("glyphicon-triangle-bottom");
+                pub.addClass("glyphicon-triangle-top");
+            }
+        })
+
+        function GetPage(ths) {
+            var wd = $("#search").val();
+            var cur_page = Number(ths.value);
+            var total_page = $("#total_page").val();
+            if (ths.name === "left") {
+                cur_page -= 1;
+            } else {
+                cur_page += 1;
+            }
+            if (cur_page >= 1 & cur_page <= total_page) {
+                if ("{{ cur_type }}" === "None") {
+                    if (wd) {
+                        window.location.href = "{% url 'blogs:articles' %}" + "?wd=" + wd + "&page=" + cur_page;
+                    }else {
+                        window.location.href = "{% url 'blogs:articles' %}" + "?page=" + cur_page;
+                    }
+                } else {
+                    if (wd) {
+                        window.location.href = "{% url 'blogs:articles' cur_type %}" + "?wd=" + wd + "&page=" + cur_page;
+                    }else {
+                        window.location.href = "{% url 'blogs:articles' cur_type %}" + "?page=" + cur_page;
+                    }
+                }
+            }
+        }
+
+        function Search(){
+            var wd = $("#search").val();
+            window.location.href = "{{ request.path }}" + "?wd=" + wd;
+        }
+
+        function ArticleDelete(ths) {
+            var aid = ths.getAttribute("aid");		
+            $.ajax({
+                url: "{% url 'blogs:articles' %}",
+                type: "get",
+                data: {"aid": aid},
+                success: function (msg) {
+                    window.location.reload();
+                }
+            })
+        }
+
+	function Getaid(aid) {
+	    $("#confirm").attr("aid", aid);
+	}
+
+        function SortPubDate(ths) {
+            if ($(ths).hasClass("glyphicon-triangle-bottom")) {
+                x = 1;
+            }else {
+                x = 0;
+            }
+            var wd = $("#search").val();
+            if (wd) {
+                window.location.href = "{{ request.path }}" + "?pub_date_sort=" + x + "&wd=" + wd;
+            }else {
+                window.location.href = "{{ request.path }}" + "?pub_date_sort=" + x;
+            }
+        }
+		
+	function ShowModal(aid) {
+    	    var modal = $("#gridSystemModal");
+    	    modal.addClass("in");
+            modal.css("display", "block");
+            modal.css("background-color", "grey");
+            modal.css("opacity", "0.7");
+	}
+
+        function HideModal() {
+            var modal = $("#gridSystemModal");
+            modal.css("display", "None");
+        }
+
+    </script>
+{% endblock %}

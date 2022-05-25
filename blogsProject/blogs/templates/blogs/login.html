@@ -1,0 +1,30 @@
+{% extends 'blogs/model.html' %}
+{% load static %}
+
+{% block css %}
+    <link rel="stylesheet" href="{% static 'blogs/css/login.css' %}">
+{% endblock %}
+
+{% block body %}
+    <div class="container">
+        <form class="form-signin" method="post" action="{% url 'blogs:auth' %}" novalidate>{% csrf_token %}
+            <h2 class="form-signin-heading">Please sign in</h2>
+            <label for="inputEmail" class="sr-only">Email address</label>
+            <input name="email" value="{{ email }}" type="email" id="inputEmail" class="form-control" placeholder="Email address" required autofocus>
+            {% if email_error %}
+                <span style="color: red">{{ email_error }}</span>
+            {% endif %}
+            <label for="inputPassword" class="sr-only">Password</label>
+            <input name="password" value="{{ password }}" type="password" id="inputPassword" class="form-control" placeholder="Password" required>
+            {% if password_error %}
+                <span style="color: red">{{ password_error }}</span>
+            {% endif %}
+            <div class="checkbox">
+                <label>
+                    <input name="remember" type="checkbox" value="remember-me"> Remember me
+                </label>
+            </div>
+            <button class="btn btn-lg btn-primary btn-block" type="submit">Sign in</button>
+        </form>
+    </div> <!-- /container -->
+{% endblock %}
